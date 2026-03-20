@@ -1,16 +1,35 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import './globals.css'
+import type { Metadata, Viewport } from "next"
+import { Roboto, Inter } from "next/font/google"
+import "./globals.css"
+import { QueryProvider } from "@/lib/query-provider"
+import { Toaster } from "@/components/ui/sonner"
 
-const inter = Inter({ subsets: ['latin'], weight: ['300', '400', '500', '600'] })
-import { QueryProvider } from '@/lib/query-provider'
+const roboto = Roboto({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "700"],
+  variable: "--font-roboto",
+})
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-inter",
+})
 
 export const metadata: Metadata = {
-  title: 'web-app',
-  description: 'Built with DevStart CLI',
+  title: "BeSafe - Automatic Safe Arrival Notifications",
+  description:
+    "Never forget to say you're safe. BeSafe automatically notifies your loved ones when you reach your destination safely.",
   icons: {
-    icon: '/icon.svg',
+    icon: "/icon.svg",
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: "#6750A4",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 }
 
 export default function RootLayout({
@@ -19,8 +38,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}><QueryProvider>{children}</QueryProvider></body>
+    <html lang="en" className={`${roboto.variable} ${inter.variable}`}>
+      <body className="font-sans bg-surface text-surface-on antialiased">
+        <QueryProvider>
+          {children}
+        </QueryProvider>
+        <Toaster />
+      </body>
     </html>
   )
 }

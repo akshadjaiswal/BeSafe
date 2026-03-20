@@ -1,3 +1,63 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 260 6% 11%;
+    --card: 270 20% 96%;
+    --card-foreground: 260 6% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 260 6% 11%;
+    --primary: 267 48% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 265 10% 40%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 270 20% 96%;
+    --muted-foreground: 264 5% 32%;
+    --accent: 270 50% 93%;
+    --accent-foreground: 274 100% 18%;
+    --destructive: 4 80% 41%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 270 11% 79%;
+    --input: 270 11% 79%;
+    --ring: 267 48% 48%;
+    --radius: 24px;
+  }
+
+  * {
+    @apply border-outline-variant;
+  }
+
+  body {
+    @apply bg-surface text-surface-on antialiased;
+  }
+
+  /* Focus visible ring */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-surface;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .text-gradient-primary {
+    @apply bg-gradient-to-r from-primary to-tertiary bg-clip-text text-transparent;
+  }
+
+  .surface-tonal {
+    @apply bg-surface-container;
+  }
+}
