@@ -1,0 +1,31 @@
+{
+  "name": "BeSafe - Safe Arrival Notifications",
+  "short_name": "BeSafe",
+  "description": "Automatic notifications when you reach your destination safely",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#FFFBFE",
+  "theme_color": "#6750A4",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["utilities", "lifestyle"],
+  "lang": "en"
+}

@@ -96,7 +96,7 @@ npm run lint   # Run ESLint
 ## Development Status
 
 - [x] Phase 1: Foundation & Design System (Tailwind, M3 components, Landing page)
-- [ ] Phase 2: Auth & Database (Supabase schema, auth pages, middleware)
-- [ ] Phase 3: Dashboard & Route/Contact Management (Maps, CRUD)
-- [ ] Phase 4: Journey Engine & Notifications (Geofencing, SMS)
-- [ ] Phase 5: PWA & Polish (Manifest, service worker, settings)
+- [x] Phase 2: Auth & Database (Supabase schema, auth pages, middleware)
+- [x] Phase 3: Dashboard & Route/Contact Management (Maps, CRUD)
+- [x] Phase 4: Journey Engine & Notifications (Geofencing, SMS)
+- [x] Phase 5: PWA & Polish (Manifest, service worker, settings)

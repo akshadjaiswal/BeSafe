@@ -4,6 +4,8 @@ import "./globals.css"
 import { QueryProvider } from "@/lib/query-provider"
 import { AuthProvider } from "@/components/providers/auth-provider"
 import { Toaster } from "@/components/ui/sonner"
+import { PWAInit } from "@/components/pwa/pwa-init"
+import { InstallPrompt } from "@/components/pwa/install-prompt"
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -21,8 +23,15 @@ export const metadata: Metadata = {
   title: "BeSafe - Automatic Safe Arrival Notifications",
   description:
     "Never forget to say you're safe. BeSafe automatically notifies your loved ones when you reach your destination safely.",
+  manifest: "/manifest.json",
   icons: {
     icon: "/icon.svg",
+    apple: "/icon-192.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "BeSafe",
   },
 }
 
@@ -47,6 +56,8 @@ export default function RootLayout({
           </AuthProvider>
         </QueryProvider>
         <Toaster />
+        <PWAInit />
+        <InstallPrompt />
       </body>
     </html>
   )
