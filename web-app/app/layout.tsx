@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next"
 import { Roboto, Inter } from "next/font/google"
 import "./globals.css"
 import { QueryProvider } from "@/lib/query-provider"
+import { AuthProvider } from "@/components/providers/auth-provider"
 import { Toaster } from "@/components/ui/sonner"
 
 const roboto = Roboto({
@@ -41,7 +42,9 @@ export default function RootLayout({
     <html lang="en" className={`${roboto.variable} ${inter.variable}`}>
       <body className="font-sans bg-surface text-surface-on antialiased">
         <QueryProvider>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </QueryProvider>
         <Toaster />
       </body>
