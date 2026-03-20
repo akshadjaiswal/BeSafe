@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { Button } from "@/components/ui/button"
+import { ActiveJourneyCard } from "@/components/journey/active-journey-card"
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Home" },
@@ -82,6 +83,7 @@ export default function DashboardLayout({
       {/* Main Content */}
       <main className="pt-16 pb-20 md:pb-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <ActiveJourneyCard />
           {children}
         </div>
       </main>
