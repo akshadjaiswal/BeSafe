@@ -67,16 +67,15 @@ export default function NewRoutePage() {
       .then(({ data }) => setContacts((data as Contact[]) || []))
   }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Reverse geocode to get address
+  // Reverse geocode to get address via Nominatim (free, no API key)
   const reverseGeocode = useCallback(async (lat: number, lng: number): Promise<string> => {
-    const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
-    if (!token) return `${lat.toFixed(4)}, ${lng.toFixed(4)}`
     try {
       const res = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${token}&limit=1`
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+        { headers: { "Accept-Language": "en" } }
       )
       const data = await res.json()
-      return data.features?.[0]?.place_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+      return data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
     } catch {
       return `${lat.toFixed(4)}, ${lng.toFixed(4)}`
     }
@@ -412,7 +411,11 @@ export default function NewRoutePage() {
                         </div>
                         <div className="flex-1">
                           <p className="font-medium text-sm">{contact.name}</p>
-                          <p className="text-xs text-surface-on-variant">{contact.phone_number}</p>
+                          <p className="text-xs text-surface-on-variant">
+                            {contact.telegram_chat_id
+                              ? `Telegram${contact.telegram_username ? ` @${contact.telegram_username}` : ""}`
+                              : contact.phone_number || "Not connected"}
+                          </p>
                         </div>
                       </button>
                     )

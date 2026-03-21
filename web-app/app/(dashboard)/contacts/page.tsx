@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, Users, Trash2, X, Phone, User } from "lucide-react"
+import { Plus, Users, Trash2, X, User, Send, Check, Loader2, RefreshCw, Phone } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,6 +13,8 @@ import { useAuthStore } from "@/lib/stores/auth-store"
 import { staggerContainer, staggerItem } from "@/lib/motion"
 import type { Contact } from "@/types"
 
+const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME
+
 export default function ContactsPage() {
   const { user } = useAuthStore()
   const [contacts, setContacts] = useState<Contact[]>([])
@@ -21,6 +23,7 @@ export default function ContactsPage() {
   const [name, setName] = useState("")
   const [phoneNumber, setPhoneNumber] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [pendingContactId, setPendingContactId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) return
@@ -36,45 +39,67 @@ export default function ContactsPage() {
       })
   }, [user])
 
+  // Poll for Telegram connection status
+  useEffect(() => {
+    if (!pendingContactId) return
+
+    const interval = setInterval(async () => {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from("contacts")
+        .select("*")
+        .eq("id", pendingContactId)
+        .single()
+
+      if (data && data.telegram_chat_id) {
+        setContacts((prev) =>
+          prev.map((c) => (c.id === pendingContactId ? (data as Contact) : c))
+        )
+        setPendingContactId(null)
+        toast.success(`${data.name} connected via Telegram!`)
+      }
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [pendingContactId])
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user || !name || !phoneNumber) return
-
-    // Validate phone
-    const e164Regex = /^\+[1-9]\d{1,14}$/
-    if (!e164Regex.test(phoneNumber)) {
-      toast.error("Phone must be in international format (e.g., +919876543210)")
-      return
-    }
+    if (!user || !name) return
 
     setIsSubmitting(true)
     const supabase = createClient()
+
+    // Generate a connect token
+    const connectToken = crypto.randomUUID()
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+
     const { data, error } = await supabase
       .from("contacts")
       .insert({
         user_id: user.id,
         name,
-        phone_number: phoneNumber,
+        phone_number: phoneNumber || null,
+        telegram_connect_token: connectToken,
+        telegram_connect_token_expires_at: expiresAt,
       })
       .select()
       .single()
 
     if (error) {
-      if (error.code === "23505") {
-        toast.error("This phone number already exists in your contacts")
-      } else {
-        toast.error("Failed to add contact")
-      }
+      toast.error("Failed to add contact")
       setIsSubmitting(false)
       return
     }
 
-    setContacts((prev) => [data as Contact, ...prev])
+    const newContact = data as Contact
+    setContacts((prev) => [newContact, ...prev])
+    setPendingContactId(newContact.id)
     setName("")
     setPhoneNumber("")
     setShowForm(false)
     setIsSubmitting(false)
-    toast.success("Contact added")
+    toast.success("Contact created! Share the Telegram link to connect.")
   }
 
   const handleDelete = async (contactId: string) => {
@@ -85,7 +110,40 @@ export default function ContactsPage() {
       return
     }
     setContacts((prev) => prev.filter((c) => c.id !== contactId))
+    if (pendingContactId === contactId) setPendingContactId(null)
     toast.success("Contact deleted")
+  }
+
+  const regenerateToken = useCallback(async (contactId: string) => {
+    const supabase = createClient()
+    const connectToken = crypto.randomUUID()
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+
+    const { data, error } = await supabase
+      .from("contacts")
+      .update({
+        telegram_connect_token: connectToken,
+        telegram_connect_token_expires_at: expiresAt,
+      })
+      .eq("id", contactId)
+      .select()
+      .single()
+
+    if (error) {
+      toast.error("Failed to generate new link")
+      return
+    }
+
+    setContacts((prev) =>
+      prev.map((c) => (c.id === contactId ? (data as Contact) : c))
+    )
+    setPendingContactId(contactId)
+    toast.success("New connection link generated")
+  }, [])
+
+  const getTelegramLink = (token: string) => {
+    if (!BOT_USERNAME) return null
+    return `https://t.me/${BOT_USERNAME}?start=${token}`
   }
 
   return (
@@ -133,7 +191,7 @@ export default function ContactsPage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="contactPhone">Phone Number</Label>
+                    <Label htmlFor="contactPhone">Phone Number (optional)</Label>
                     <div className="relative">
                       <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-on-variant" />
                       <Input
@@ -145,10 +203,10 @@ export default function ContactsPage() {
                       />
                     </div>
                     <p className="text-xs text-surface-on-variant">
-                      International format with country code (e.g., +91 for India)
+                      Optional. Notifications are sent via Telegram.
                     </p>
                   </div>
-                  <Button type="submit" disabled={isSubmitting || !name || !phoneNumber}>
+                  <Button type="submit" disabled={isSubmitting || !name}>
                     {isSubmitting ? "Adding..." : "Add Contact"}
                   </Button>
                 </form>
@@ -173,7 +231,7 @@ export default function ContactsPage() {
             </div>
             <h3 className="text-lg font-medium text-surface-on mb-2">No Contacts Yet</h3>
             <p className="text-surface-on-variant mb-6">
-              Add your first emergency contact to receive safe arrival notifications.
+              Add your first emergency contact to receive safe arrival notifications via Telegram.
             </p>
             <Button onClick={() => setShowForm(true)}>
               <Plus className="w-4 h-4 mr-2" /> Add Contact
@@ -185,22 +243,86 @@ export default function ContactsPage() {
           {contacts.map((contact) => (
             <motion.div key={contact.id} variants={staggerItem}>
               <Card className="hover:shadow-elevation-1 transition-all duration-300">
-                <CardContent className="p-4 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-lg font-medium text-secondary-on-container shrink-0">
-                    {contact.name[0]?.toUpperCase()}
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-lg font-medium text-secondary-on-container shrink-0">
+                      {contact.name[0]?.toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-surface-on">{contact.name}</p>
+                      {contact.telegram_chat_id ? (
+                        <div className="flex items-center gap-1.5">
+                          <Check className="w-3.5 h-3.5 text-green-600" />
+                          <span className="text-sm text-green-600">
+                            Connected{contact.telegram_username ? ` @${contact.telegram_username}` : ""}
+                          </span>
+                        </div>
+                      ) : contact.telegram_connect_token && pendingContactId === contact.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <Loader2 className="w-3.5 h-3.5 text-surface-on-variant animate-spin" />
+                          <span className="text-sm text-surface-on-variant">Waiting for connection...</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-surface-on-variant">Not connected</span>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(contact.id)}
+                      className="text-error hover:bg-error-container shrink-0"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-surface-on">{contact.name}</p>
-                    <p className="text-sm text-surface-on-variant">{contact.phone_number}</p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(contact.id)}
-                    className="text-error hover:bg-error-container shrink-0"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+
+                  {/* Telegram connection actions */}
+                  {!contact.telegram_chat_id && (
+                    <div className="flex gap-2 pl-16">
+                      {contact.telegram_connect_token && BOT_USERNAME ? (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs"
+                            onClick={() => {
+                              const link = getTelegramLink(contact.telegram_connect_token!)
+                              if (link) {
+                                navigator.clipboard.writeText(link)
+                                setPendingContactId(contact.id)
+                                toast.success("Link copied! Share it with your contact.")
+                              }
+                            }}
+                          >
+                            <Send className="w-3.5 h-3.5 mr-1.5" /> Copy Link
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-xs"
+                            onClick={() => {
+                              const link = getTelegramLink(contact.telegram_connect_token!)
+                              if (link) {
+                                window.open(link, "_blank")
+                                setPendingContactId(contact.id)
+                              }
+                            }}
+                          >
+                            Open in Telegram
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs"
+                          onClick={() => regenerateToken(contact.id)}
+                        >
+                          <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> Generate Connect Link
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>

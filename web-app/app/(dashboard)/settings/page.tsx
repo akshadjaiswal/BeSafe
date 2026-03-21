@@ -133,8 +133,8 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-surface-on-variant">
-              BeSafe sends SMS notifications to your contacts when you arrive at your destination.
-              Configure which contacts receive notifications in the Routes section.
+              BeSafe sends Telegram notifications to your contacts when you arrive at your destination.
+              Connect contacts via Telegram on the Contacts page, then assign them to routes.
             </p>
           </CardContent>
         </Card>

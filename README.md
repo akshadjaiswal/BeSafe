@@ -4,13 +4,13 @@
 
 ## Building Phase
 
-BeSafe's UI is fully built across 5 development phases. The app renders and is navigable, but full functionality requires external service credentials (Supabase, Mapbox, Plivo).
+BeSafe's UI is fully built across 5 development phases. The app renders and is navigable, but full functionality requires external service credentials (Supabase, Telegram). Maps work out of the box with no API key.
 
 | What works without credentials | What needs credentials |
 |-------------------------------|----------------------|
 | All UI pages and navigation | User registration & login |
-| Landing page | Route creation with maps |
-| Design system & animations | SMS notifications |
+| Landing page & map display | Route creation (geocoding) |
+| Design system & animations | Telegram notifications |
 | Demo mode (browse all UI) | Geofencing & journey tracking |
 | PWA install prompt | Data persistence |
 
@@ -40,7 +40,7 @@ Using intelligent geofencing technology, the app detects when you leave a starti
 - **Privacy First** — Only tracks during defined journeys, never 24/7
 - **Delay Alerts** — Emergency contacts notified if you don't arrive on time
 - **Multiple Routes** — Home to Office, Office to Home, or any custom route
-- **SMS Notifications** — Contacts get instant SMS — no app needed on their end
+- **Telegram Notifications** — Contacts get instant Telegram messages — just click a link to connect
 
 ## Tech Stack
 
@@ -53,8 +53,8 @@ Using intelligent geofencing technology, the app detects when you leave a starti
 | Animations | Framer Motion |
 | Database | Supabase (PostgreSQL + RLS) |
 | Auth | Supabase Auth (Email + Google OAuth) |
-| Maps | Mapbox GL JS |
-| SMS | Plivo API |
+| Maps | MapLibre GL JS (free CARTO tiles) |
+| Notifications | Telegram Bot API |
 | State | Zustand + TanStack Query |
 | Deployment | Vercel |
 
@@ -70,7 +70,7 @@ npm install
 
 # Set up environment variables
 cp .env.local.example .env.local
-# Edit .env.local with your Supabase, Mapbox, and Plivo credentials
+# Edit .env.local with your Supabase and Telegram credentials (maps work without any key)
 
 # Run development server
 npm run dev
@@ -89,10 +89,8 @@ After creating a Supabase project, run `supabase/schema.sql` in the Supabase SQL
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-only) |
-| `NEXT_PUBLIC_MAPBOX_TOKEN` | Mapbox GL JS access token |
-| `PLIVO_AUTH_ID` | Plivo Auth ID (server-only) |
-| `PLIVO_AUTH_TOKEN` | Plivo Auth Token (server-only) |
-| `PLIVO_PHONE_NUMBER` | Plivo sender phone number |
+| `TELEGRAM_BOT_TOKEN` | Telegram bot token from @BotFather (server-only) |
+| `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` | Telegram bot username (for connect links) |
 
 ## Project Structure
 
@@ -107,7 +105,7 @@ web-app/
 ├── components/
 │   ├── ui/                # shadcn/ui base components (M3 styled)
 │   ├── landing/           # Landing page sections
-│   ├── map/               # Mapbox components
+│   ├── map/               # MapLibre map components
 │   ├── journey/           # Journey tracking components
 │   └── contacts/          # Contact management components
 ├── lib/

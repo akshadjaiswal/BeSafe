@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
-import { sendSMSWithRetry } from "@/lib/services/plivo"
+import { sendTelegramMessageWithRetry } from "@/lib/services/telegram"
 import { format } from "date-fns"
 
 function getServiceClient() {
@@ -69,22 +69,28 @@ export async function POST(request: Request) {
     const results = []
 
     for (const contact of contacts) {
-      const message = `⚠️ ${name} hasn't reached ${destination} yet. Last seen at ${lastSeenTime}.${mapLink ? " " + mapLink : ""}`
+      // Skip contacts without Telegram connected
+      if (!contact.telegram_chat_id) {
+        results.push({ contact_id: contact.id, status: "skipped" })
+        continue
+      }
 
-      const smsResult = await sendSMSWithRetry(contact.phone_number, message)
+      const message = `⚠️ ${name} hasn't reached ${destination} yet. Last seen at ${lastSeenTime}.${mapLink ? "\n" + mapLink : ""}`
+
+      const result = await sendTelegramMessageWithRetry(contact.telegram_chat_id, message)
 
       await supabase.from("notifications_log").insert({
         journey_id,
         contact_id: contact.id,
         type: "timeout_alert",
         message,
-        delivery_status: smsResult.status === "sent" ? "sent" : "failed",
-        sms_provider_id: smsResult.messageId || null,
+        delivery_status: result.status === "sent" ? "sent" : "failed",
+        provider_message_id: result.messageId || null,
       })
 
       results.push({
         contact_id: contact.id,
-        status: smsResult.status,
+        status: result.status,
       })
     }
 

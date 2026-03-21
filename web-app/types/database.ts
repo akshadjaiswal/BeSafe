@@ -41,7 +41,11 @@ export interface Contact {
   id: string
   user_id: string
   name: string
-  phone_number: string
+  phone_number: string | null
+  telegram_chat_id: string | null
+  telegram_username: string | null
+  telegram_connect_token: string | null
+  telegram_connect_token_expires_at: string | null
   created_at: string
   updated_at: string
 }
@@ -71,7 +75,7 @@ export interface NotificationLog {
   message: string
   sent_at: string
   delivery_status: DeliveryStatus
-  sms_provider_id: string | null
+  provider_message_id: string | null
 }
 
 // Route with joined contacts

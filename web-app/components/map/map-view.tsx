@@ -1,8 +1,8 @@
 "use client"
 
 import { useRef, useCallback, useEffect } from "react"
-import Map, { Marker, Source, Layer, type MapRef } from "react-map-gl/mapbox"
-import "mapbox-gl/dist/mapbox-gl.css"
+import Map, { Marker, Source, Layer, type MapRef } from "react-map-gl/maplibre"
+import "maplibre-gl/dist/maplibre-gl.css"
 
 interface MapViewProps {
   onMapClick?: (lat: number, lng: number) => void
@@ -20,7 +20,6 @@ export function MapView({
   interactive = true,
 }: MapViewProps) {
   const mapRef = useRef<MapRef>(null)
-  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
 
   const handleClick = useCallback(
     (e: { lngLat: { lat: number; lng: number } }) => {
@@ -47,16 +46,6 @@ export function MapView({
       mapRef.current.fitBounds(bounds, { padding: 80, duration: 1000 })
     }
   }, [departure, destination])
-
-  if (!token) {
-    return (
-      <div className={`${className} rounded-3xl bg-surface-container flex items-center justify-center`}>
-        <p className="text-surface-on-variant text-sm text-center px-4">
-          Map requires NEXT_PUBLIC_MAPBOX_TOKEN in your .env.local file
-        </p>
-      </div>
-    )
-  }
 
   // Create geofence circle GeoJSON
   const createCircle = (center: { lat: number; lng: number }, radius: number) => {
@@ -86,14 +75,13 @@ export function MapView({
     <div className={`${className} rounded-3xl overflow-hidden`}>
       <Map
         ref={mapRef}
-        mapboxAccessToken={token}
         initialViewState={{
           latitude: center.lat,
           longitude: center.lng,
           zoom: 13,
         }}
         style={{ width: "100%", height: "100%" }}
-        mapStyle="mapbox://styles/mapbox/light-v11"
+        mapStyle="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
         onClick={handleClick}
         cursor={interactive ? "crosshair" : "grab"}
       >

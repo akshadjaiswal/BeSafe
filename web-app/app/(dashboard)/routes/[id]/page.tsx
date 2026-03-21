@@ -212,7 +212,11 @@ export default function RouteDetailPage() {
                     </div>
                     <div>
                       <p className="text-sm font-medium">{contact.name}</p>
-                      <p className="text-xs text-surface-on-variant">{contact.phone_number}</p>
+                      <p className="text-xs text-surface-on-variant">
+                        {contact.telegram_chat_id
+                          ? `Telegram${contact.telegram_username ? ` @${contact.telegram_username}` : ""}`
+                          : contact.phone_number || "Not connected"}
+                      </p>
                     </div>
                   </div>
                 ))}

@@ -89,11 +89,16 @@ CREATE TABLE contacts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
-  phone_number TEXT NOT NULL, -- E.164 format
+  phone_number TEXT, -- E.164 format (optional, for future SMS support)
+  telegram_chat_id TEXT, -- Telegram chat ID for sending messages
+  telegram_username TEXT, -- Telegram display name
+  telegram_connect_token TEXT UNIQUE, -- One-time token for linking via Telegram bot
+  telegram_connect_token_expires_at TIMESTAMPTZ, -- 24h expiry
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(user_id, phone_number)
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE INDEX idx_contacts_telegram_connect_token ON contacts(telegram_connect_token) WHERE telegram_connect_token IS NOT NULL;
 
 ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
 
@@ -194,7 +199,7 @@ CREATE TABLE notifications_log (
   sent_at TIMESTAMPTZ DEFAULT NOW(),
   delivery_status TEXT DEFAULT 'pending'
     CHECK (delivery_status IN ('pending', 'sent', 'delivered', 'failed')),
-  sms_provider_id TEXT
+  provider_message_id TEXT -- Telegram message ID or SMS provider ID
 );
 
 ALTER TABLE notifications_log ENABLE ROW LEVEL SECURITY;

@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-BeSafe is a PWA for automatic safe arrival notifications. Users set routes (Home -> Office), and the app auto-detects departure/arrival via geofencing, sending SMS to emergency contacts.
+BeSafe is a PWA for automatic safe arrival notifications. Users set routes (Home -> Office), and the app auto-detects departure/arrival via geofencing, sending Telegram notifications to emergency contacts.
 
 ## Working Directory
 
@@ -16,8 +16,9 @@ All npm commands (`npm run dev`, `npm run build`, `npm run lint`) must be run fr
 - **Animations**: Framer Motion with Material easing `cubic-bezier(0.2, 0, 0, 1)`
 - **Database**: Supabase PostgreSQL with Row Level Security
 - **Auth**: Supabase Auth (email/password + Google OAuth)
-- **Maps**: Mapbox GL JS via react-map-gl
-- **SMS**: Plivo API via Next.js API routes
+- **Maps**: MapLibre GL JS via react-map-gl (free CARTO tiles, no API key needed)
+- **Geocoding**: Nominatim (OpenStreetMap, free, no API key)
+- **Notifications**: Telegram Bot API via Next.js API routes
 - **State**: Zustand (client state) + TanStack Query (server state)
 - **Validation**: Zod schemas
 - **Icons**: Lucide React
@@ -54,13 +55,13 @@ All npm commands (`npm run dev`, `npm run build`, `npm run lint`) must be run fr
 - `app/(dashboard)/` — Route group for authenticated pages
 - `components/ui/` — shadcn/ui primitives (M3 customized)
 - `components/landing/` — Landing page sections
-- `components/map/` — Mapbox components
+- `components/map/` — MapLibre map components
 - `components/journey/` — Journey tracking UI
 - `components/contacts/` — Contact management UI
 - `lib/supabase/` — Supabase client/server setup
 - `lib/stores/` — Zustand stores
 - `lib/geo/` — Geofencing logic
-- `lib/services/` — External API wrappers (Plivo)
+- `lib/services/` — External API wrappers (Telegram, Plivo)
 - `lib/validations/` — Zod schemas
 - `hooks/` — Custom React hooks
 - `types/` — TypeScript types
@@ -76,18 +77,20 @@ All npm commands (`npm run dev`, `npm run build`, `npm run lint`) must be run fr
 
 - `profiles` — User profiles (extends auth.users)
 - `routes` — User-defined routes with geofence data
-- `contacts` — Emergency contacts (E.164 phone format)
+- `contacts` — Emergency contacts (Telegram-linked, optional phone number)
 - `route_contacts` — Many-to-many route-contact mapping
 - `journeys` — Journey sessions with status tracking
-- `notifications_log` — SMS delivery log
+- `notifications_log` — Telegram/SMS delivery log
 
 ## Key Architecture Decisions
 
 1. **No Prisma** — Use Supabase JS client directly
-2. **API routes for SMS** — Not Supabase Edge Functions (simpler deployment)
+2. **API routes for notifications** — Not Supabase Edge Functions (simpler deployment)
 3. **Service worker is hand-written** — Full control over geofencing + caching
 4. **shadcn/ui as base, M3 styling on top** — Accessibility + custom visuals
 5. **Route group `(dashboard)`** — Shared layout without affecting URLs
+6. **MapLibre over Mapbox** — Free, no API key or payment info needed
+7. **Telegram over SMS** — Free notifications, contacts connect via bot link
 
 ## Commands
 
@@ -100,13 +103,13 @@ npm run lint   # Run ESLint
 
 ## Testing
 
-No automated test suite yet. Manual testing via `npm run dev` on `localhost:3000`. Full end-to-end testing requires real Supabase, Mapbox, and Plivo credentials configured in `.env.local`. Without credentials, the app still renders UI but data operations will no-op.
+No automated test suite yet. Manual testing via `npm run dev` on `localhost:3000`. Full end-to-end testing requires real Supabase and Telegram credentials configured in `.env.local`. Maps work without any credentials (free tiles). Without Supabase credentials, the app still renders UI but data operations will no-op.
 
 ## What NOT to Do
 
 - **Don't modify `components/ui/` directly** — These are shadcn/ui primitives with M3 customizations. Use them as-is or wrap them.
 - **Don't use Prisma** — Supabase JS client is the ORM replacement.
-- **Don't use Edge Functions** — SMS and server logic go through Next.js API routes.
+- **Don't use Edge Functions** — Notification and server logic go through Next.js API routes.
 - **Don't remove the Supabase client placeholder fallback** — The app gracefully handles missing env vars; don't break that.
 - **Don't use raw hex colors** — Always use M3 design tokens (e.g., `text-primary`, `bg-surface-container`).
 - **Don't use `alert()`** — Use `sonner` toast (`toast.success()`, `toast.error()`).
@@ -135,8 +138,9 @@ Direct Supabase client calls inside `useEffect` — no TanStack Query wrappers y
 | Service | Purpose | Env Vars |
 |---------|---------|----------|
 | **Supabase** | Auth, database (PostgreSQL + RLS) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` |
-| **Mapbox** | Map display for route creation | `NEXT_PUBLIC_MAPBOX_TOKEN` |
-| **Plivo** | SMS notifications to contacts | `PLIVO_AUTH_ID`, `PLIVO_AUTH_TOKEN`, `PLIVO_PHONE_NUMBER` |
+| **MapLibre GL** | Map display for route creation | None (free CARTO tiles) |
+| **Nominatim** | Reverse geocoding | None (free OSM service) |
+| **Telegram** | Notifications to contacts | `TELEGRAM_BOT_TOKEN`, `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` |
 
 To set up Supabase schema, run `supabase/schema.sql` in your Supabase project's SQL Editor.
 
@@ -151,5 +155,5 @@ To set up Supabase schema, run `supabase/schema.sql` in your Supabase project's 
 - [x] Phase 1: Foundation & Design System (Tailwind, M3 components, Landing page)
 - [x] Phase 2: Auth & Database (Supabase schema, auth pages, middleware)
 - [x] Phase 3: Dashboard & Route/Contact Management (Maps, CRUD)
-- [x] Phase 4: Journey Engine & Notifications (Geofencing, SMS)
+- [x] Phase 4: Journey Engine & Notifications (Geofencing, Telegram)
 - [x] Phase 5: PWA & Polish (Manifest, service worker, settings)
