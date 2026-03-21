@@ -20,13 +20,95 @@ const statusConfig: Record<JourneyStatus, { label: string; variant: "success" | 
   cancelled: { label: "Cancelled", variant: "outline", icon: XCircle },
 }
 
+// DEMO MODE - TEMPORARY
+const now = new Date()
+const DEMO_ROUTE_MORNING = {
+  id: "demo-route-1",
+  user_id: "demo-user-id",
+  name: "Morning Commute",
+  departure_location: { lat: 19.076, lng: 72.8777, address: "Home - Andheri West", radius: 200 },
+  destination_location: { lat: 19.0176, lng: 72.8562, address: "Office - Lower Parel", radius: 200 },
+  active_days: [1, 2, 3, 4, 5],
+  expected_duration_mins: 45,
+  is_active: true,
+  created_at: now.toISOString(),
+  updated_at: now.toISOString(),
+}
+const DEMO_ROUTE_EVENING = {
+  id: "demo-route-2",
+  user_id: "demo-user-id",
+  name: "Evening Return",
+  departure_location: { lat: 19.0176, lng: 72.8562, address: "Office - Lower Parel", radius: 200 },
+  destination_location: { lat: 19.076, lng: 72.8777, address: "Home - Andheri West", radius: 200 },
+  active_days: [1, 2, 3, 4, 5],
+  expected_duration_mins: 55,
+  is_active: true,
+  created_at: now.toISOString(),
+  updated_at: now.toISOString(),
+}
+
+function demoDate(daysAgo: number, hours: number, mins: number): string {
+  const d = subDays(now, daysAgo)
+  d.setHours(hours, mins, 0, 0)
+  return d.toISOString()
+}
+
+const DEMO_JOURNEYS: JourneyWithRoute[] = [
+  {
+    id: "demo-j1", user_id: "demo-user-id", route_id: "demo-route-1",
+    departure_time: demoDate(1, 8, 30), arrival_time: demoDate(1, 9, 12),
+    expected_arrival_time: demoDate(1, 9, 15), status: "completed",
+    last_known_location: null, created_at: demoDate(1, 8, 30), route: DEMO_ROUTE_MORNING,
+  },
+  {
+    id: "demo-j2", user_id: "demo-user-id", route_id: "demo-route-2",
+    departure_time: demoDate(1, 18, 0), arrival_time: demoDate(1, 18, 50),
+    expected_arrival_time: demoDate(1, 18, 55), status: "completed",
+    last_known_location: null, created_at: demoDate(1, 18, 0), route: DEMO_ROUTE_EVENING,
+  },
+  {
+    id: "demo-j3", user_id: "demo-user-id", route_id: "demo-route-1",
+    departure_time: demoDate(2, 8, 45), arrival_time: demoDate(2, 9, 28),
+    expected_arrival_time: demoDate(2, 9, 30), status: "completed",
+    last_known_location: null, created_at: demoDate(2, 8, 45), route: DEMO_ROUTE_MORNING,
+  },
+  {
+    id: "demo-j4", user_id: "demo-user-id", route_id: "demo-route-2",
+    departure_time: demoDate(2, 19, 15), arrival_time: null,
+    expected_arrival_time: demoDate(2, 20, 10), status: "timeout_alert_sent",
+    last_known_location: { lat: 19.05, lng: 72.87, timestamp: demoDate(2, 20, 5) },
+    created_at: demoDate(2, 19, 15), route: DEMO_ROUTE_EVENING,
+  },
+  {
+    id: "demo-j5", user_id: "demo-user-id", route_id: "demo-route-1",
+    departure_time: demoDate(3, 8, 30), arrival_time: demoDate(3, 9, 18),
+    expected_arrival_time: demoDate(3, 9, 15), status: "completed",
+    last_known_location: null, created_at: demoDate(3, 8, 30), route: DEMO_ROUTE_MORNING,
+  },
+  {
+    id: "demo-j6", user_id: "demo-user-id", route_id: "demo-route-2",
+    departure_time: demoDate(4, 17, 30), arrival_time: null,
+    expected_arrival_time: demoDate(4, 18, 25), status: "cancelled",
+    last_known_location: null, created_at: demoDate(4, 17, 30), route: DEMO_ROUTE_EVENING,
+  },
+]
+// END DEMO MODE
+
 export default function HistoryPage() {
-  const { user } = useAuthStore()
+  const { user, isDemoMode } = useAuthStore() // DEMO MODE - TEMPORARY: added isDemoMode
   const [journeys, setJourneys] = useState<JourneyWithRoute[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<JourneyStatus | "all">("all")
 
   useEffect(() => {
+    // DEMO MODE - TEMPORARY
+    if (isDemoMode) {
+      setJourneys(DEMO_JOURNEYS)
+      setLoading(false)
+      return
+    }
+    // END DEMO MODE
+
     if (!user) return
     const supabase = createClient()
 
@@ -42,7 +124,7 @@ export default function HistoryPage() {
         setJourneys((data as JourneyWithRoute[]) || [])
         setLoading(false)
       })
-  }, [user])
+  }, [user, isDemoMode])
 
   const filteredJourneys =
     statusFilter === "all"

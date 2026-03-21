@@ -15,8 +15,49 @@ import type { Contact } from "@/types"
 
 const BOT_USERNAME = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME
 
+// DEMO MODE - TEMPORARY
+const DEMO_CONTACTS: Contact[] = [
+  {
+    id: "demo-contact-1",
+    user_id: "demo-user-id",
+    name: "Mom",
+    phone_number: "+919876543210",
+    telegram_chat_id: "123456789",
+    telegram_username: "mom_safe",
+    telegram_connect_token: null,
+    telegram_connect_token_expires_at: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "demo-contact-2",
+    user_id: "demo-user-id",
+    name: "Dad",
+    phone_number: "+919876543211",
+    telegram_chat_id: "987654321",
+    telegram_username: "dad_safe",
+    telegram_connect_token: null,
+    telegram_connect_token_expires_at: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "demo-contact-3",
+    user_id: "demo-user-id",
+    name: "Roommate",
+    phone_number: null,
+    telegram_chat_id: null,
+    telegram_username: null,
+    telegram_connect_token: "demo-token-123",
+    telegram_connect_token_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+]
+// END DEMO MODE
+
 export default function ContactsPage() {
-  const { user } = useAuthStore()
+  const { user, isDemoMode } = useAuthStore() // DEMO MODE - TEMPORARY: added isDemoMode
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -26,6 +67,14 @@ export default function ContactsPage() {
   const [pendingContactId, setPendingContactId] = useState<string | null>(null)
 
   useEffect(() => {
+    // DEMO MODE - TEMPORARY
+    if (isDemoMode) {
+      setContacts(DEMO_CONTACTS)
+      setLoading(false)
+      return
+    }
+    // END DEMO MODE
+
     if (!user) return
     const supabase = createClient()
     supabase
@@ -37,7 +86,7 @@ export default function ContactsPage() {
         setContacts((data as Contact[]) || [])
         setLoading(false)
       })
-  }, [user])
+  }, [user, isDemoMode])
 
   // Poll for Telegram connection status
   useEffect(() => {
@@ -66,6 +115,13 @@ export default function ContactsPage() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user || !name) return
+
+    // DEMO MODE - TEMPORARY
+    if (isDemoMode) {
+      toast.error("Sign up to add contacts")
+      return
+    }
+    // END DEMO MODE
 
     setIsSubmitting(true)
     const supabase = createClient()
@@ -103,6 +159,12 @@ export default function ContactsPage() {
   }
 
   const handleDelete = async (contactId: string) => {
+    // DEMO MODE - TEMPORARY
+    if (isDemoMode) {
+      toast.error("Sign up to manage contacts")
+      return
+    }
+    // END DEMO MODE
     const supabase = createClient()
     const { error } = await supabase.from("contacts").delete().eq("id", contactId)
     if (error) {
@@ -115,6 +177,12 @@ export default function ContactsPage() {
   }
 
   const regenerateToken = useCallback(async (contactId: string) => {
+    // DEMO MODE - TEMPORARY
+    if (isDemoMode) {
+      toast.error("Sign up to manage contacts")
+      return
+    }
+    // END DEMO MODE
     const supabase = createClient()
     const connectToken = crypto.randomUUID()
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
