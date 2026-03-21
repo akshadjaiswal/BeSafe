@@ -21,6 +21,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { createClient } from "@/lib/supabase/client"
 import { useAuthStore } from "@/lib/stores/auth-store"
 import { staggerContainer, staggerItem } from "@/lib/motion"
+import { LocationSearch } from "@/components/map/location-search"
 import type { Contact, Location } from "@/types"
 
 const MapView = dynamic(
@@ -45,6 +46,7 @@ export default function NewRoutePage() {
 
   const [step, setStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number; zoom?: number; _ts?: number } | null>(null)
 
   // Form state
   const [departure, setDeparture] = useState<Location | null>(null)
@@ -91,6 +93,18 @@ export default function NewRoutePage() {
       }
     },
     [step, departureRadius, destinationRadius, reverseGeocode]
+  )
+
+  const handleLocationSelect = useCallback(
+    (lat: number, lng: number, address: string) => {
+      if (step === 1) {
+        setDeparture({ lat, lng, address, radius: departureRadius })
+      } else if (step === 2) {
+        setDestination({ lat, lng, address, radius: destinationRadius })
+      }
+      setFlyTarget({ lat, lng, zoom: 15, _ts: Date.now() })
+    },
+    [step, departureRadius, destinationRadius]
   )
 
   const toggleDay = (day: number) => {
@@ -183,15 +197,21 @@ export default function NewRoutePage() {
                 <div>
                   <h2 className="text-lg font-medium">Set Departure Location</h2>
                   <p className="text-sm text-surface-on-variant">
-                    Tap on the map to place your starting point
+                    Search for a place or tap on the map
                   </p>
                 </div>
               </div>
+
+              <LocationSearch
+                onLocationSelect={handleLocationSelect}
+                placeholder="Search departure location..."
+              />
 
               <MapView
                 onMapClick={handleMapClick}
                 departure={departure}
                 destination={null}
+                flyToLocation={flyTarget}
               />
 
               {departure && (
@@ -244,15 +264,21 @@ export default function NewRoutePage() {
                 <div>
                   <h2 className="text-lg font-medium">Set Destination</h2>
                   <p className="text-sm text-surface-on-variant">
-                    Tap on the map to place your destination
+                    Search for a place or tap on the map
                   </p>
                 </div>
               </div>
+
+              <LocationSearch
+                onLocationSelect={handleLocationSelect}
+                placeholder="Search destination..."
+              />
 
               <MapView
                 onMapClick={handleMapClick}
                 departure={departure}
                 destination={destination}
+                flyToLocation={flyTarget}
               />
 
               {destination && (

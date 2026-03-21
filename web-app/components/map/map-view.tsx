@@ -8,6 +8,7 @@ interface MapViewProps {
   onMapClick?: (lat: number, lng: number) => void
   departure?: { lat: number; lng: number; radius?: number } | null
   destination?: { lat: number; lng: number; radius?: number } | null
+  flyToLocation?: { lat: number; lng: number; zoom?: number; _ts?: number } | null
   className?: string
   interactive?: boolean
 }
@@ -16,6 +17,7 @@ export function MapView({
   onMapClick,
   departure,
   destination,
+  flyToLocation,
   className = "w-full h-[400px]",
   interactive = true,
 }: MapViewProps) {
@@ -29,6 +31,17 @@ export function MapView({
     },
     [onMapClick, interactive]
   )
+
+  // Fly to location when search result is selected
+  useEffect(() => {
+    if (flyToLocation && mapRef.current) {
+      mapRef.current.flyTo({
+        center: [flyToLocation.lng, flyToLocation.lat],
+        zoom: flyToLocation.zoom ?? 15,
+        duration: 1500,
+      })
+    }
+  }, [flyToLocation])
 
   // Fit bounds when both markers are set
   useEffect(() => {
