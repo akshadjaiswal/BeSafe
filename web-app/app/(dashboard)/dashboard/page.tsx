@@ -14,12 +14,69 @@ import type { Route } from "@/types"
 
 const dayLabels = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
+// DEMO MODE - TEMPORARY
+const DEMO_ROUTES: Route[] = [
+  {
+    id: "demo-route-1",
+    user_id: "demo-user-id",
+    name: "Morning Commute",
+    departure_location: {
+      lat: 19.076,
+      lng: 72.8777,
+      address: "Home - Andheri West",
+      radius: 200,
+    },
+    destination_location: {
+      lat: 19.0176,
+      lng: 72.8562,
+      address: "Office - Lower Parel",
+      radius: 200,
+    },
+    active_days: [1, 2, 3, 4, 5],
+    expected_duration_mins: 45,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "demo-route-2",
+    user_id: "demo-user-id",
+    name: "Evening Return",
+    departure_location: {
+      lat: 19.0176,
+      lng: 72.8562,
+      address: "Office - Lower Parel",
+      radius: 200,
+    },
+    destination_location: {
+      lat: 19.076,
+      lng: 72.8777,
+      address: "Home - Andheri West",
+      radius: 200,
+    },
+    active_days: [1, 2, 3, 4, 5],
+    expected_duration_mins: 55,
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+]
+// END DEMO MODE
+
 export default function DashboardPage() {
-  const { user } = useAuthStore()
+  const { user, isDemoMode } = useAuthStore() // DEMO MODE - TEMPORARY: added isDemoMode
   const [routes, setRoutes] = useState<Route[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // DEMO MODE - TEMPORARY
+    if (isDemoMode) {
+      setRoutes(DEMO_ROUTES)
+      setLoading(false)
+      return
+    }
+    // END DEMO MODE
+
     if (!user) return
     const supabase = createClient()
     supabase
@@ -31,7 +88,7 @@ export default function DashboardPage() {
         setRoutes((data as Route[]) || [])
         setLoading(false)
       })
-  }, [user])
+  }, [user, isDemoMode]) // DEMO MODE - TEMPORARY: added isDemoMode dep
 
   return (
     <motion.div

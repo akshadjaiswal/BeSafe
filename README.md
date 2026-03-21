@@ -2,7 +2,30 @@
 
 > Never forget to say you're safe. BeSafe automatically notifies your loved ones when you reach your destination.
 
-**Status: In Development**
+## Building Phase
+
+BeSafe's UI is fully built across 5 development phases. The app renders and is navigable, but full functionality requires external service credentials (Supabase, Mapbox, Plivo).
+
+| What works without credentials | What needs credentials |
+|-------------------------------|----------------------|
+| All UI pages and navigation | User registration & login |
+| Landing page | Route creation with maps |
+| Design system & animations | SMS notifications |
+| Demo mode (browse all UI) | Geofencing & journey tracking |
+| PWA install prompt | Data persistence |
+
+## Demo Mode
+
+You can browse the full UI without setting up any external services:
+
+1. `cd web-app && npm install && npm run dev`
+2. Open [http://localhost:3000](http://localhost:3000)
+3. Click **"Enter Demo Mode"** on the login page
+4. You'll be redirected to the dashboard with mock route data
+5. Navigate freely — Contacts, History, Settings all render with empty states
+6. Click **Sign Out** to exit demo mode
+
+Demo mode uses fake Zustand state (no real auth). Page refreshes persist the demo session via localStorage.
 
 ## What is BeSafe?
 
@@ -54,6 +77,10 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view the app.
+
+### Supabase Schema Setup
+
+After creating a Supabase project, run `supabase/schema.sql` in the Supabase SQL Editor to create all required tables (profiles, routes, contacts, journeys, etc.) with Row Level Security policies.
 
 ## Environment Variables
 

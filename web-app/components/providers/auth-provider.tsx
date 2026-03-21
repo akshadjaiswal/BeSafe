@@ -10,6 +10,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { setUser, setProfile, setLoading, signOut: clearAuth } = useAuthStore()
 
   useEffect(() => {
+    // DEMO MODE - TEMPORARY: Skip Supabase init if in demo mode
+    if (useAuthStore.getState().isDemoMode) {
+      setLoading(false)
+      setInitialized(true)
+      return
+    }
+    // END DEMO MODE
+
     // Check if Supabase is configured
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
       setLoading(false)

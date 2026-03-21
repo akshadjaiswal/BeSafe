@@ -4,12 +4,13 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { Mail, Lock, Eye, EyeOff } from "lucide-react"
+import { Mail, Lock, Eye, EyeOff, Play } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createClient } from "@/lib/supabase/client"
+import { useAuthStore } from "@/lib/stores/auth-store"
 import { staggerContainer, staggerItem } from "@/lib/motion"
 
 export default function LoginPage() {
@@ -57,6 +58,13 @@ export default function LoginPage() {
       toast.error(error.message)
     }
   }
+
+  // DEMO MODE - TEMPORARY
+  const handleDemoLogin = () => {
+    useAuthStore.getState().loginAsDemo()
+    router.push("/dashboard")
+  }
+  // END DEMO MODE
 
   return (
     <motion.div
@@ -173,6 +181,28 @@ export default function LoginPage() {
           Sign up
         </Link>
       </motion.p>
+
+      {/* DEMO MODE - TEMPORARY */}
+      <motion.div variants={staggerItem} className="mt-6">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="flex-1 h-px border-t border-dashed border-outline-variant" />
+          <span className="text-xs text-surface-on-variant/60">or try it out</span>
+          <div className="flex-1 h-px border-t border-dashed border-outline-variant" />
+        </div>
+        <Button
+          variant="outline"
+          className="w-full h-12 border-dashed border-outline-variant text-surface-on-variant hover:text-surface-on hover:border-outline"
+          onClick={handleDemoLogin}
+          type="button"
+        >
+          <Play className="w-4 h-4 mr-2" />
+          Enter Demo Mode
+        </Button>
+        <p className="text-center mt-2 text-xs text-surface-on-variant/50">
+          Browse the UI with mock data — no account needed
+        </p>
+      </motion.div>
+      {/* END DEMO MODE */}
     </motion.div>
   )
 }
