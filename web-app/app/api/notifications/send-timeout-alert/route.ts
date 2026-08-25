@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { sendTelegramMessageWithRetry } from "@/lib/services/telegram"
+import { isAuthorizedInternalRequest } from "@/lib/internal-auth"
 import { format } from "date-fns"
 
 function getServiceClient() {
@@ -16,6 +17,10 @@ function getServiceClient() {
 
 export async function POST(request: Request) {
   try {
+    if (!isAuthorizedInternalRequest(request)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { journey_id, user_name } = await request.json()
 
     if (!journey_id) {

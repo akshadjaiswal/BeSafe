@@ -20,8 +20,14 @@ function getServiceClient() {
  *
  * Call this every 5 minutes via Vercel Cron or external cron.
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const secret = process.env.CRON_SECRET
+    const authHeader = request.headers.get("authorization")
+    if (!secret || authHeader !== `Bearer ${secret}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const supabase = getServiceClient()
 
     // Fetch active journeys that have exceeded their expected arrival + 50% buffer
@@ -51,7 +57,10 @@ export async function GET() {
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
         await fetch(`${appUrl}/api/notifications/send-timeout-alert`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-Internal-Secret": process.env.CRON_SECRET || "",
+          },
           body: JSON.stringify({
             journey_id: journey.id,
             user_name: journey.user?.full_name || "User",
