@@ -1,12 +1,21 @@
 import { NextResponse } from "next/server"
 import { setTelegramWebhook } from "@/lib/services/telegram"
+import { isAuthorizedInternalRequest } from "@/lib/internal-auth"
 
 export async function POST(request: Request) {
   try {
+    if (!isAuthorizedInternalRequest(request)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { webhook_url } = await request.json()
 
     if (!webhook_url) {
       return NextResponse.json({ error: "webhook_url is required" }, { status: 400 })
+    }
+
+    if (!webhook_url.startsWith("https://")) {
+      return NextResponse.json({ error: "webhook_url must be https" }, { status: 400 })
     }
 
     const success = await setTelegramWebhook(webhook_url)
