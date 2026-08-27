@@ -1,5 +1,7 @@
 # BeSafe - Automatic Safe Arrival Notifications
 
+> **Status: Not actively worked on right now.**
+
 > Never forget to say you're safe. BeSafe automatically notifies your loved ones when you reach your destination.
 
 ## Building Phase
